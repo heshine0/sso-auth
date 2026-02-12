@@ -34,6 +34,7 @@ COPY --from=build /app/.output .output
 
 # Copy prisma directory for migrations
 COPY --from=build /app/prisma ./prisma
+COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 
 # Set environment variables
 ENV NODE_ENV=production
