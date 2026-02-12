@@ -67,4 +67,4 @@ jobs:
           port: ${{ secrets.SERVER_PORT }}
           script: |
             # Run deployment
-            sudo /opt/deploy-scripts/update-container.sh
+            sudo /opt/deploy-scripts/update-container.sh --migrate-db=${{ github.event.inputs.migrate == 'true' && 'true' || 'false' }} sso-auth 

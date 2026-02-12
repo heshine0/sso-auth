@@ -1,0 +1,22 @@
+services:
+  sso-auth:
+    image: crpi-qwgkgmimlvym3181.cn-shanghai.personal.cr.aliyuncs.com/shine-read/sso-auth:latest
+    container_name: sso-auth
+    network_mode: host
+    env_file:
+      - .sso-auth.env
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "${BETTER_AUTH_URL}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  sso-auth-migrate:
+    image: crpi-qwgkgmimlvym3181.cn-shanghai.personal.cr.aliyuncs.com/shine-read/sso-auth:latest
+    container_name: sso-auth-migrate
+    env_file:
+      - .sso-auth.env
+    restart: "no"
+    command: ["bunx", "prisma", "migrate", "deploy"]
