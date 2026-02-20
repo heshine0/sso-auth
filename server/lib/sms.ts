@@ -35,16 +35,15 @@ export class SMSService {
       });
 
       const response = await this.client.sendSms(request);
-      
+      // console.log('SMS response:', response);
       if (response.body && response.body.code === 'OK') {
         return true;
       }
       
-      console.error('SMS sending failed:', response.body?.message || 'Unknown error');
-      return false;
+      throw new Error(response.body?.message || 'Unknown error');
     } catch (error) {
       console.error('Error sending OTP:', error);
-      return false;
+      throw error
     }
   }
 
