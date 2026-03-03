@@ -3,6 +3,7 @@ import { betterAuth } from "better-auth/minimal";
 import {  openAPI, phoneNumber } from "better-auth/plugins";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { smsService, getTempEmail as makeTempEmail, getTempName as makeTempName } from "./sms";
+import { wechatAuth } from "./wechat-auth-plugin";
 import prisma from "./prisma";
 import { statusCodes } from "better-auth";
 
@@ -43,6 +44,7 @@ export const auth = betterAuth({
         //     loginPage: "/sign-in",
         //     consentPage: "/consent",
         // }),
-        openAPI()
+        openAPI(),
+        wechatAuth()
     ]
 });

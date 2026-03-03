@@ -73,3 +73,15 @@ model Verification {
   @@index([identifier])
   @@map("verification")
 }
+
+model WechatMiniprogram {
+  id          String   @id @default(uuid())
+  appId       String   @unique
+  appSecret   String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("wechat_miniprogram")
+}
