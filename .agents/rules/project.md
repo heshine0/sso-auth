@@ -6,7 +6,8 @@ This is an SSO login service built with the `better-auth` library. It serves as 
 - **Framework**: Nuxt 4
 - **Language**: TypeScript
 - **Database**: PostgreSQL with **Prisma** ORM
-- **Styling**: UnoCSS (Tailwind-compatible)
+- **UI Components**: Nuxt UI  @docs [nuxt-ui-llms-full.txt](./nuxt-ui-llms-full.txt)
+- **Styling**:  Tailwind CSS
 - **Authentication**: better-auth library
 - **bundler**: bun (https://bun.sh/)
 
@@ -14,6 +15,7 @@ This is an SSO login service built with the `better-auth` library. It serves as 
 For detailed framework documentation, refer to the following local context files:
 - **Nuxt 4**: [nuxt-llms.txt](file:./nuxt-llms.txt) (or https://nuxt.com/llms.txt)
 - **better-auth**: [better-auth-llms.txt](file:./better-auth-llms.txt) (or https://better-auth.com/llms.txt)
+
 
 ## Coding Guidelines
 

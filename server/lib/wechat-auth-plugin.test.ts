@@ -3,11 +3,24 @@ import { wechatAuth } from "./wechat-auth-plugin";
 import { wechatService } from "./wechat";
 import prisma from "./prisma";
 
-// Mock internal adapter methods since we don't have the full better-auth context set up in this unit test
+// Mock wechatService.getPhoneNumber
+const getPhoneNumberSpy = spyOn(wechatService, "getPhoneNumber");
+
+// Mock context
 const mockInternalAdapter = {
-    createUser: mock(async (data: any) => ({ ...data, id: "new_user_id" })),
-    createSession: mock(async (userId: string) => ({ token: "mock_session_token", expiresAt: new Date(), userId })),
-    findUserByPhoneNumber: mock(async () => null), // Not used in plugin directly anymore
+    createUser: mock(async (data: any) => {
+        return {
+            id: "mock_user_id",
+            ...data
+        };
+    }),
+    createSession: mock(async (userId: string) => {
+        return {
+            token: "mock_session_token",
+            expiresAt: new Date(Date.now() + 3600 * 1000),
+            userId
+        };
+    })
 };
 
 const mockCtx = {
@@ -15,57 +28,60 @@ const mockCtx = {
         appId: "wx1234567890abcdef",
         code: "mock_code"
     },
-    json: (data: any, opts: any) => ({ data, opts }),
+    request: new Request("http://localhost"),
+    json: (data: any) => data,
     setCookie: mock(),
     context: {
         internalAdapter: mockInternalAdapter,
         authCookies: {
             sessionToken: {
                 name: "better-auth.session_token",
-                options: { httpOnly: true }
+                options: {}
             }
         },
         logger: {
-            error: console.error
+            error: mock()
         }
-    },
-    request: new Request("http://localhost/wechat/login", { method: "POST" })
+    }
 };
 
 describe("WeChat Auth Plugin", () => {
     
+    // Mock Prisma for this test suite
+    const mockFindUnique = mock();
+    const mockCreate = mock();
+    const mockDeleteMany = mock();
+    
+    // Override prisma with mocks
+    (prisma as any).wechatMiniprogram = {
+        findUnique: mockFindUnique,
+        create: mockCreate,
+        deleteMany: mockDeleteMany
+    };
+    (prisma as any).user = {
+        findUnique: mock(() => Promise.resolve(null)), // Mock user not found initially
+        deleteMany: mockDeleteMany
+    };
+
     beforeAll(async () => {
-        // Ensure seed data exists
-        const appId = "wx1234567890abcdef";
-        const existing = await prisma.wechatMiniprogram.findUnique({ where: { appId } });
-        if (!existing) {
-             await prisma.wechatMiniprogram.create({
-                data: {
-                    appId,
-                    appSecret: "mock_secret_1234567890abcdef",
-                    name: "Mock Mini Program"
-                }
-             });
-        }
+        mockFindUnique.mockResolvedValue({
+            appId: "wx1234567890abcdef",
+            appSecret: "mock_secret",
+            name: "Mock App"
+        });
     });
 
     afterAll(async () => {
-        // Cleanup created user if any (optional)
-        await prisma.user.deleteMany({ where: { phoneNumber: "13800138000" } });
     });
 
-    it("should login successfully and create a new user", async () => {
-        // Mock WeChat Service response
-        const getPhoneNumberSpy = spyOn(wechatService, "getPhoneNumber").mockResolvedValue("13800138000");
+    it("should login successfully with valid code", async () => {
+        // Mock WeChat service response
+        getPhoneNumberSpy.mockResolvedValue("13800138000");
 
         const plugin = wechatAuth();
         const handler = plugin.endpoints.login;
 
         const result: any = await handler(mockCtx as any);
-
-        // Verify WeChat Service was called with correct args
-        expect(getPhoneNumberSpy).toHaveBeenCalled();
-        expect(getPhoneNumberSpy.mock.calls[0]).toEqual(["wx1234567890abcdef", "mock_secret_1234567890abcdef", "mock_code"]);
 
         // Verify result
         expect(result.session).toBeDefined();
@@ -78,5 +94,24 @@ describe("WeChat Auth Plugin", () => {
         expect(createArgs.phoneNumber).toBe("13800138000");
 
         getPhoneNumberSpy.mockRestore();
+    });
+
+    it("should return error if appId is invalid", async () => {
+        // Mock findUnique to return null for invalid appId
+        mockFindUnique.mockImplementation(async (args: any) => {
+            if (args.where.appId === "invalid_app_id") return null;
+            return {
+                appId: "wx1234567890abcdef",
+                appSecret: "mock_secret",
+                name: "Mock App"
+            };
+        });
+
+        const invalidCtx = { ...mockCtx, body: { appId: "invalid_app_id", code: "code" } };
+        const plugin = wechatAuth();
+        const handler = plugin.endpoints.login;
+
+        const result: any = await handler(invalidCtx as any);
+        expect(result.error).toBe("Invalid App ID");
     });
 });

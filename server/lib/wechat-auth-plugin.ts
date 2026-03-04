@@ -56,7 +56,7 @@ export const wechatAuth = () => {
                             // Fallback for email collision: append random string
                             // But internalAdapter.createUser might handle or throw.
                             // We'll assume it's fine for now.
-                            email = `${email.split('@')[0]}_${Math.random().toString(36).substring(2, 5)}@${email.split('@')[1]}`;
+                            email = `${email.split("@")[0]}_${Math.random().toString(36).substring(2, 5)}@${email.split("@")[1]}`;
                         }
 
                         // Use internal adapter to create user to trigger hooks
