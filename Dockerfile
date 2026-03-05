@@ -13,13 +13,15 @@ FROM base AS build
 COPY --from=install /temp/dev/node_modules node_modules
 COPY . .
 
+# environment variables 
+ENV NODE_ENV=production
+ENV NITRO_PRESET=bun
+
 # Generate Prisma Client
 # This generates the client into server/generated/prisma as configured in schema.prisma
 RUN bunx prisma generate
 
 # Build the Nuxt application
-ENV NODE_ENV=production
-ENV NITRO_PRESET=bun
 RUN bun run build
 
 # Release stage
@@ -40,7 +42,7 @@ COPY --from=build /app/prisma.config.ts ./prisma.config.ts
 ENV NODE_ENV=production
 ENV NITRO_HOST=0.0.0.0
 # Default port is 3000, can be overridden by -e PORT=8080
-ENV PORT=3000
+ENV PORT=8000
 
 # Start the serverDATABASE_URL=postgresql://user:password@host:5432/db
 # ENV BETTER_AUTH_SECRET=your_secret

@@ -19,7 +19,7 @@
           />
           <UButton
             block
-            color="neutral"
+            color="info"
             icon="i-heroicons-arrow-right-on-rectangle"
             label="Sign out"
             @click="handleSignOut"
