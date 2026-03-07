@@ -17,7 +17,7 @@ export class SMSService {
       accessKeySecret: process.env.ALIYUN_ACCESS_KEY_SECRET,
       endpoint: 'dysmsapi.aliyuncs.com'
     });
-    
+
     // Handle CJS/ESM interop issue where default export might be wrapped
     const Client = (Dysmsapi20170525 as any).default || Dysmsapi20170525;
     this.client = new Client(config);
@@ -39,7 +39,7 @@ export class SMSService {
       if (response.body && response.body.code === 'OK') {
         return true;
       }
-      
+
       throw new Error(response.body?.message || 'Unknown error');
     } catch (error) {
       console.error('Error sending OTP:', error);
@@ -55,7 +55,7 @@ export class SMSService {
 export const smsService = new SMSService();
 
 export function getTempEmail(phoneNumber: string) {
-  return `phone_${phoneNumber.replace(/[^0-9]/g, "")}@sso-auth.local`;
+  return `phone_${phoneNumber.replace(/[^0-9]/g, "")}@shinehe.cn`;
 }
 
 export function getTempName(phoneNumber: string) {
