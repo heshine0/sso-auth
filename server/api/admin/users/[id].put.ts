@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const body = await readBody(event);
-  const { name, email, phoneNumber, emailVerified, phoneNumberVerified } = body;
+  const { name, email, phoneNumber, role, emailVerified, phoneNumberVerified } = body;
 
   try {
     const user = await prisma.user.update({
@@ -16,6 +16,7 @@ export default defineEventHandler(async (event) => {
         name,
         email,
         phoneNumber,
+        role,
         emailVerified,
         phoneNumberVerified,
       },

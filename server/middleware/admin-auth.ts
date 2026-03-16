@@ -20,9 +20,7 @@ export default defineEventHandler(async (event) => {
     });
   }
 
-  const adminEmails = (process.env.ADMIN_EMAILS || "").split(",").map((e) => e.trim());
-
-  if (!adminEmails.includes(session.user.email)) {
+  if (session.user.role !== "admin") {
     throw createError({
       statusCode: 403,
       statusMessage: "Forbidden: Not an admin",

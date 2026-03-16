@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth/minimal";
 // import { oauthProvider } from "@better-auth/oauth-provider";
-import { openAPI, phoneNumber, bearer } from "better-auth/plugins";
+import { openAPI, phoneNumber, bearer, admin } from "better-auth/plugins";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { smsService, getTempEmail as makeTempEmail, getTempName as makeTempName } from "./sms";
 import { wechatAuth } from "./wechat-auth-plugin";
@@ -46,6 +46,7 @@ export const auth = betterAuth({
         bearer(),
         wechatAuth(),
         openAPI(),
+        admin(),
 
     ]
 });

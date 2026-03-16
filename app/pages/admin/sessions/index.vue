@@ -9,13 +9,13 @@
 
     <div class="flex gap-2">
       <UInput
-        v-model="searchUserId"
+        v-model="searchInput"
         placeholder="Filter by User ID"
         icon="i-heroicons-magnifying-glass"
-        @keyup.enter="refresh"
+        @keyup.enter="handleSearch"
         class="w-full max-w-sm"
       />
-      <UButton @click="refresh()">Filter</UButton>
+      <UButton @click="handleSearch">Filter</UButton>
     </div>
 
     <UCard>
@@ -33,14 +33,14 @@
         
         <template #actions-cell="{ row }">
           <div class="flex gap-2">
-            <UButton size="xs" color="primary" variant="ghost" icon="i-heroicons-pencil-square" @click="openEditModal(row.original)" />
-            <UButton size="xs" color="error" variant="ghost" icon="i-heroicons-trash" @click="confirmDelete(row.original)" />
+            <UButton size="xs" color="primary" variant="ghost" icon="i-heroicons-pencil-square" @click="openEditModal(row)" />
+            <UButton size="xs" color="error" variant="ghost" icon="i-heroicons-trash" @click="confirmDelete(row)" />
           </div>
         </template>
       </UTable>
       
       <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
-        <UPagination v-model="page" :page-count="pageSize" :total="total" />
+        <UPagination v-model:page="page" :items-per-page="pageSize" :total="total" />
       </div>
     </UCard>
 
@@ -112,6 +112,7 @@ import type { TableColumn } from "@nuxt/ui";
 
 definePageMeta({
   layout: "admin",
+  middleware: "admin",
 });
 
 const toast = useToast();
@@ -119,16 +120,21 @@ const toast = useToast();
 // Data Fetching
 const page = ref(1);
 const pageSize = ref(10);
+const searchInput = ref("");
 const searchUserId = ref("");
 
 const { data, pending, refresh } = await useFetch("/api/admin/sessions", {
-  query: {
-    page,
-    pageSize,
-    userId: searchUserId,
-  },
-  watch: [page, pageSize],
+  query: computed(() => ({
+    page: page.value,
+    pageSize: pageSize.value,
+    userId: searchUserId.value || undefined,
+  })),
 });
+
+function handleSearch() {
+  page.value = 1;
+  searchUserId.value = searchInput.value;
+}
 
 const sessions = computed(() => data.value?.sessions || []);
 const total = computed(() => data.value?.total || 0);

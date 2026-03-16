@@ -9,13 +9,13 @@
 
     <div class="flex gap-2">
       <UInput
-        v-model="searchQuery"
+        v-model="searchInput"
         placeholder="Search by name or AppID"
         icon="i-heroicons-magnifying-glass"
-        @keyup.enter="refresh"
+        @keyup.enter="handleSearch"
         class="w-full max-w-sm"
       />
-      <UButton @click="refresh()">Search</UButton>
+      <UButton @click="handleSearch">Search</UButton>
     </div>
 
     <UCard>
@@ -37,7 +37,7 @@
       </UTable>
       
       <div class="flex justify-end px-3 py-3.5 border-t border-gray-200 dark:border-gray-700">
-        <UPagination v-model="page" :page-count="pageSize" :total="total" />
+        <UPagination v-model:page="page" :items-per-page="pageSize" :total="total" />
       </div>
     </UCard>
 
@@ -98,8 +98,8 @@
       </template>
       <template #footer>
         <div class="flex justify-end gap-2">
-           <UButton color="neutral" variant="ghost" @click="showDeleteModal = false">Cancel</UButton>
-           <UButton color="error" @click="handleDelete" :loading="deleting">Delete</UButton>
+          <UButton color="neutral" variant="ghost" @click="showDeleteModal = false">Cancel</UButton>
+          <UButton color="error" @click="handleDelete" :loading="deleting">Delete</UButton>
         </div>
       </template>
     </UModal>
@@ -112,6 +112,7 @@ import type { TableColumn } from "@nuxt/ui";
 
 definePageMeta({
   layout: "admin",
+  middleware: "admin",
 });
 
 const toast = useToast();
@@ -119,16 +120,21 @@ const toast = useToast();
 // Data Fetching
 const page = ref(1);
 const pageSize = ref(10);
+const searchInput = ref("");
 const searchQuery = ref("");
 
 const { data, pending, refresh } = await useFetch("/api/admin/wechat-miniprograms", {
-  query: {
-    page,
-    pageSize,
-    search: searchQuery,
-  },
-  watch: [page, pageSize],
+  query: computed(() => ({
+    page: page.value,
+    pageSize: pageSize.value,
+    search: searchQuery.value || undefined,
+  })),
 });
+
+function handleSearch() {
+  page.value = 1;
+  searchQuery.value = searchInput.value;
+}
 
 const items = computed(() => data.value?.items || []);
 const total = computed(() => data.value?.total || 0);

@@ -27,6 +27,6 @@
 <script setup lang="ts">
 definePageMeta({
   layout: 'admin',
-  // middleware: 'admin-auth' // Uncomment if you have auth middleware
+  middleware: 'admin'
 })
 </script>

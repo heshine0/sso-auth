@@ -8,9 +8,9 @@ export default defineEventHandler(async (event) => {
 
   const where = search ? {
     OR: [
-      { name: { contains: search, mode: 'insensitive' } },
-      { email: { contains: search, mode: 'insensitive' } },
-      { phoneNumber: { contains: search, mode: 'insensitive' } },
+      { name: { contains: search, mode: 'insensitive' as const } },
+      { email: { contains: search, mode: 'insensitive' as const } },
+      { phoneNumber: { contains: search, mode: 'insensitive' as const } },
     ],
   } : {};
 

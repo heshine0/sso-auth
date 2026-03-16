@@ -3,7 +3,7 @@ import { auth } from "../../../lib/auth";
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event);
-  const { email, password, name, phoneNumber } = body;
+  const { email, password, name, phoneNumber, role } = body;
 
   if (!email || !password || !name) {
     throw createError({
@@ -22,11 +22,14 @@ export default defineEventHandler(async (event) => {
       }
     });
     
-    // If phoneNumber is provided, update it directly
-    if (phoneNumber && user?.user?.id) {
+    // If phoneNumber or role is provided, update it directly
+    if ((phoneNumber || role) && user?.user?.id) {
        await prisma.user.update({
          where: { id: user.user.id },
-         data: { phoneNumber }
+         data: { 
+           ...(phoneNumber && { phoneNumber }),
+           ...(role && { role })
+         }
        });
     }
 
