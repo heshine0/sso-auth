@@ -1,6 +1,8 @@
 import type { BetterAuthPlugin } from "better-auth";
 import { z } from "zod";
 import { createAuthEndpoint } from "better-auth/api";
+import { setSessionCookie } from "better-auth/cookies";
+import { makeSignature } from "better-auth/crypto";
 import { wechatService } from "./wechat";
 import prisma from "./prisma";
 import { getTempEmail, getTempName } from "./sms";
@@ -10,7 +12,7 @@ export const wechatAuth = () => {
     return {
         id: "wechat-miniprogram",
         endpoints: {
-            login: createAuthEndpoint("/wechat/login", {
+            login: createAuthEndpoint("/sign-in/wechat-phone", {
                 method: "POST",
                 body: z.object({
                     appId: z.string(),
@@ -80,19 +82,19 @@ export const wechatAuth = () => {
                     const session = await ctx.context.internalAdapter.createSession(user.id, false, ctx.request);
 
                     // 5. Set Cookie
-                    // Use better-auth's cookie helpers if available in context, or manually set
-                    if (ctx.setCookie && ctx.context.authCookies) {
-                        const cookieName = ctx.context.authCookies.sessionToken.name;
-                        const cookieOptions = ctx.context.authCookies.sessionToken.attributes;
-                        
-                        // Adjust maxAge based on session expiry if needed, but options usually have defaults
-                        ctx.setCookie(cookieName, session.token, {
-                            ...cookieOptions,
-                            expires: session.expiresAt
-                        });
-                    }
+                    await setSessionCookie(ctx, { session, user });
 
-                    return ctx.json({ session, user });
+                    // 6. Sign Token for Response
+                    // The session.token from internalAdapter is raw. We need to sign it for the client.
+                    const signedToken = await makeSignature(session.token, ctx.context?.secret??process.env.BETTER_AUTH_SECRET);
+
+                    return ctx.json({ 
+                        session: {
+                            ...session,
+                            token: signedToken
+                        }, 
+                        user 
+                    });
                 } catch (error: any) {
                     // Log error using better-auth logger if available
                     if (ctx.context.logger) {
