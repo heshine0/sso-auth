@@ -1,3 +1,4 @@
+#  gh workflow run docker-deploy.yml -f environment=prod -f migrate=false
 name: Docker Build and Deploy
 
 on:

@@ -131,15 +131,15 @@ const toast = useToast();
 const page = ref(1);
 const pageSize = ref(10);
 const searchQuery = ref("");
+const activeSearchQuery = ref("");
 
 const { data, pending, refresh, error } = await useFetch('/api/admin/users', {
-  query: {
+  query: computed(() => ({
     page: page.value,
     pageSize: pageSize.value,
     limit: pageSize.value,
-    search: searchQuery.value || undefined,
-  },
-  watch: [page, pageSize],
+    search: activeSearchQuery.value || undefined,
+  })),
 });
 
 watch(error, (val) => {
@@ -154,7 +154,7 @@ watch(error, (val) => {
 
 function handleSearch() {
   page.value = 1;
-  refresh();
+  activeSearchQuery.value = searchQuery.value;
 }
 
 const users = computed(() => data.value?.users || []);
