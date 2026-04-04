@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createAuthEndpoint } from "better-auth/api";
 import { setSessionCookie } from "better-auth/cookies";
 import { makeSignature } from "better-auth/crypto";
+import { randomUUID } from "node:crypto";
 import { wechatService } from "./wechat";
 import prisma from "./prisma";
 import { getTempEmail, getTempName } from "./sms";
@@ -71,6 +72,17 @@ export const wechatAuth = () => {
                             createdAt: new Date(),
                             updatedAt: new Date()
                         }) as Prisma.UserModel;
+
+                        // Create credential account with empty password to disable password login
+                        await prisma.account.create({
+                            data: {
+                                id: randomUUID(),
+                                userId: user.id,
+                                providerId: "credential",
+                                accountId: user.email,
+                                password: null,
+                            }
+                        });
                     }
                     
                     if (!user) {
