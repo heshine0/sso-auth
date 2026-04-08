@@ -1,4 +1,3 @@
-import { auth } from "../../lib/auth";
 import prisma from "../../lib/prisma";
 
 const MAX_USER_IDS = 500;
