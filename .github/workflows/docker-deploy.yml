@@ -2,70 +2,70 @@
 name: Docker Build and Deploy
 
 on:
-  workflow_dispatch:
-    inputs:
-      environment:
-        description: 'Environment to deploy to'
-        required: true
-        default: 'prod'
-        type: choice
-        options:
-          - prod
-          - staging
-      version:
-        description: 'Version tag for the image'
-        required: false
-        type: string
-      migrate:
-        description: 'Run database migrations after deployment'
-        required: false
-        default: false
-        type: boolean
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: "Environment to deploy to"
+                required: true
+                default: "prod"
+                type: choice
+                options:
+                    - prod
+                    - staging
+            version:
+                description: "Version tag for the image"
+                required: false
+                type: string
+            migrate:
+                description: "Run database migrations after deployment"
+                required: false
+                default: false
+                type: boolean
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+    build:
+        runs-on: ubuntu-latest
+        environment: ${{ github.event.inputs.environment }}
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
 
-      - name: Log in to Alibaba Cloud Container Registry
-        uses: docker/login-action@v3
-        with:
-          registry: ${{ secrets.DOCKER_REGISTRY_HOST }}
-          username: ${{ secrets.DOCKER_REGISTRY_USER }}
-          password: ${{ secrets.DOCKER_REGISTRY_PASSWORD }}
+            - name: Log in to GitHub Container Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: ghcr.io
+                  username: ${{ github.actor }}
+                  password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: |
-            ${{ secrets.DOCKER_REGISTRY_HOST }}/${{ secrets.DOCKER_REGISTRY_NAMESPACE }}/sso-auth:${{ github.sha }}
-            ${{ secrets.DOCKER_REGISTRY_HOST }}/${{ secrets.DOCKER_REGISTRY_NAMESPACE }}/sso-auth:latest
-          # Use available GitHub contexts (repository and run id) which are reliable
-          labels: |
-            org.opencontainers.image.revision=${{ github.sha }}
-            org.opencontainers.image.source=${{ github.repository }}
-            org.opencontainers.image.created=${{ github.run_id }}
+            - name: Build and push Docker image
+              uses: docker/build-push-action@v5
+              with:
+                  context: .
+                  push: true
+                  tags: |
+                      ghcr.io/${{ github.repository_owner }}/sso-auth:${{ github.sha }}
+                      ghcr.io/${{ github.repository_owner }}/sso-auth:latest
+                  # Use available GitHub contexts (repository and run id) which are reliable
+                  labels: |
+                      org.opencontainers.image.revision=${{ github.sha }}
+                      org.opencontainers.image.source=${{ github.repository }}
+                      org.opencontainers.image.created=${{ github.run_id }}
 
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment: ${{ github.event.inputs.environment }}
-    steps:
-      - name: Run server-side deployment script
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: ${{ secrets.SERVER_PORT }}
-          script: |
-            # Run deployment
-            sudo /opt/deploy-scripts/update-container.sh --migrate-db=${{ github.event.inputs.migrate == 'true' && 'true' || 'false' }} sso-auth 
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        environment: ${{ github.event.inputs.environment }}
+        steps:
+            - name: Run server-side deployment script
+              uses: appleboy/ssh-action@v1.0.3
+              with:
+                  host: ${{ secrets.SERVER_HOST }}
+                  username: ${{ secrets.SERVER_USERNAME }}
+                  key: ${{ secrets.SSH_PRIVATE_KEY }}
+                  port: ${{ secrets.SERVER_PORT }}
+                  script: |
+                      # Run deployment
+                      sudo /opt/deploy-scripts/update-container.sh --migrate-db=${{ github.event.inputs.migrate == 'true' && 'true' || 'false' }} sso-auth
