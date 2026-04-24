@@ -108,7 +108,9 @@ export class SMSService {
 export const smsService = new SMSService();
 
 export function getTempEmail(phoneNumber: string) {
-  return `phone_${phoneNumber.replace(/[^0-9]/g, "")}@shinehe.cn`;
+  const runtimeConfig = useRuntimeConfig();
+  const domain = runtimeConfig.public.emailDomain || 'shinehe.cn';
+  return `phone_${phoneNumber.replace(/[^0-9]/g, "")}@${domain}`;
 }
 
 export function getTempName(phoneNumber: string) {
